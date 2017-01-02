@@ -29,10 +29,12 @@ if (opt$v) {
   library("RSQLite")
   library(ggplot2)
   library(dplyr)
+  library(RColorBrewer)
 } else{
   suppressPackageStartupMessages(library("RSQLite"))
   suppressPackageStartupMessages(library(ggplot2))
   suppressPackageStartupMessages(library(dplyr))
+  suppressPackageStartupMessages(library(RColorBrewer))
 }
 
 
@@ -81,22 +83,32 @@ a = a %>% group_by(web,month) %>% mutate(
 
 if (opt$v) {cat("Processing finished\n")}
 
-
-b = a
-b[!b$mfilter,]$web <- "other"
-b$web <- factor(b$web,levels=unique(b$web),ordered = TRUE)
-month_plot <- ggplot(data = b,aes(x = month,fill=web)) +
-  geom_bar()
-
-c = a
-c[!c$mfilter,]$web <- "other"
-c$wkd <- factor(c$wkd,levels=c("Monday","Tuesday", "Wednesday", "Thursday", "Friday", "Saturday","Sunday"),ordered = TRUE)
-c$web <- factor(c$web,levels=unique(c$web),ordered = TRUE)
-
-
 if (opt$v) {cat("Plotting...")}
-week_day_plot <- ggplot(data = c,aes(x = wkd,fill=web,color = web)) +
-  geom_bar()
+if(opt$w){
+  c = a
+  c[!c$wfilter,]$web <- "other"
+  c$wkd <- factor(c$wkd,levels=c("Monday","Tuesday", "Wednesday", "Thursday", "Friday", "Saturday","Sunday"),ordered = TRUE)
+  webs <- c %>% group_by(web) %>% summarise(
+    n = n()
+  )
+  webs <- webs[order(webs$n,decreasing = TRUE),]
+  c$web <- factor(c$web,levels=webs$web,ordered = TRUE)
+  week_day_plot <- ggplot(data = c,aes(x = wkd,fill=web,color = web)) +
+    geom_bar()
+  ncolors <- length(unique(c$web))
+} else {
+  b = a
+  b[!b$mfilter,]$web <- "other"
+  webs <- b %>% group_by(web) %>% summarise(
+    n = n()
+  )
+  webs <- webs[order(webs$n,decreasing = TRUE),]
+  b$web <- factor(b$web,levels=webs$web,ordered = TRUE)
+  month_plot <- ggplot(data = b,aes(x = month,fill=web)) +
+    geom_bar()
+  ncolors <- length(unique(b$web))
+}
+
 
 unif.theme <- theme(
   panel.background = element_rect(fill = "white"),
@@ -111,13 +123,21 @@ unif.theme <- theme(
   legend.text = element_text(size = rel(1.2))
 )
 
-colors <- scale_color_brewer(palette = "Spectral",direction = -1)
-fill <- scale_fill_brewer(palette = "Spectral",direction = -1)
+if(ncolors <= 11){
+  colors <- brewer.pal(n = ncolors,"Spectral")
+} else {
+  colors.tmp <- brewer.pal(n = 11,"Spectral")
+  colfunc <- colorRampPalette(colors.tmp)
+  colors <- colfunc(ncolors)
+}
+color <- scale_color_manual(values = rev(colors))
+fill <- scale_fill_manual(values = rev(colors))
+
 
 if(opt$w){
-  fp <- week_day_plot + unif.theme + colors + fill
+  fp <- week_day_plot + unif.theme + color + fill
 } else {
-  fp <- month_plot + unif.theme + colors + fill
+  fp <- month_plot + unif.theme + color + fill
 }
 
 if (opt$v) {cat("saving the output...")}

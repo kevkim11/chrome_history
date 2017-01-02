@@ -1,6 +1,7 @@
 # Data files
 *.csv
 *.db
+*.pdf
 
 # History files
 .Rhistory

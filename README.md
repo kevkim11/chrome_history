@@ -1,26 +1,24 @@
 # Plot your Chrome history
 
-## Detect your hist
 
-### In MAC 
+## In macOS
 
-It should be in `~/Library/Application\ Support/Google/Chrome/Default/History` 
+The history should be in `~/Library/Application\ Support/Google/Chrome/Default/History`
 
 You can then change the name for sake of clarity.
 
-
-## Extract the db in a csv
-
-Script from [here](https://gist.github.com/TravelingTechGuy/7ac464f6cccde912a6ec7a1e2f8aa96a).
-
 ```
-sqlite3 chrome_history.db < extract_hist.sql
+cp ~/Library/Application\ Support/Google/Chrome/Default/History chrome_history.db
 ```
 
-## Plot by month and week-day
+With the file you should be able to reproduce the plot.
 
 ```
-Rscript history_plot.R
+Rscript history_plot.R -f chrome_history.db
 ```
 
-and then a Rplots file will be generated. 
+For the monthly plot use:
+
+```
+Rscript history_plot.R -f chrome_history.db -m
+```

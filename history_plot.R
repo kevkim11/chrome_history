@@ -54,7 +54,7 @@ if (opt$v) {cat("Discoconected from the db...\n")}
 colnames(a) <- c("date","web")
 a$date <- as.Date(a$date)
 a$web <- as.character(a$web)
-a  <- filter(a,date > as.Date("1990-01-01"))
+a  <- filter(a,date > as.Date("2016-01-01"))
 
 a$web <- apply(a,1,function(x){
   unlist(strsplit(x[2],"/"))[3]
